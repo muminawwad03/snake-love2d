@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+  <meta name="description" content="Snake built in Lua with LÖVE, running in the browser via love.js.">
+  <style>
+    :root {
+      --bg-top: #161b33;
+      --bg-bottom: #0a0d1a;
+      --text: #e8ecf8;
+      --muted: #8b93b8;
+      --mint: #8ef5a4;
+      --teal: #1fa59b;
+      --panel: #121731;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: linear-gradient(180deg, var(--bg-top), var(--bg-bottom)) fixed;
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 32px;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 40px;
+      letter-spacing: 0.3em;
+      background: linear-gradient(90deg, var(--mint), var(--teal));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+    .frame {
+      position: relative;
+      width: 640px;
+      max-width: 100%;
+      aspect-ratio: 640 / 700;
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    /* The canvas must have no border or padding, or input coordinates break */
+    #canvas, #loadingCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      display: block;
+      outline: none;
+    }
+    #canvas { visibility: hidden; }
+    .keys {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    kbd {
+      display: inline-block;
+      min-width: 26px;
+      padding: 2px 7px;
+      margin-right: 4px;
+      border-radius: 6px;
+      background: #1f2748;
+      border: 1px solid #2c3766;
+      color: var(--text);
+      font: 12px ui-monospace, Menlo, monospace;
+      text-align: center;
+    }
+    footer { margin-top: 22px; font-size: 13px; color: var(--muted); }
+    footer a { color: var(--mint); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    button {
+      margin-left: 10px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1px solid #2c3766;
+      background: #1f2748;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+    }
+    button:hover { background: #283263; }
+  </style>
+</head>
+<body>
+  <h1>SNAKE</h1>
+  <p class="sub">Lua + LÖVE, running in your browser</p>
+
+  <div class="frame">
+    <canvas id="loadingCanvas" width="640" height="700"></canvas>
+    <canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+  </div>
+
+  <div class="keys">
+    <span><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> or <kbd>WASD</kbd> move</span>
+    <span><kbd>Enter</kbd> start</span>
+    <span><kbd>P</kbd> pause</span>
+    <span><kbd>Esc</kbd> menu</span>
+  </div>
+
+  <footer>
+    Click the game if keys don't respond.
+    <button onclick="goFullScreen()">Fullscreen</button>
+    <br><br>
+    Built with <a href="https://love2d.org">LÖVE</a> and <a href="https://github.com/Davidobot/love.js">love.js</a>
+    · <a href="https://github.com/muminawwad03/snake-love2d">Source on GitHub</a>
+  </footer>
+
+  <script>
+    function goFullScreen() {
+      var c = document.getElementById("canvas");
+      (c.requestFullscreen || c.webkitRequestFullScreen || c.mozRequestFullScreen).call(c);
+    }
+
+    var loadingContext = document.getElementById("loadingCanvas").getContext("2d");
+    function drawLoadingText(text) {
+      var c = loadingContext.canvas;
+      loadingContext.fillStyle = "#121731";
+      loadingContext.fillRect(0, 0, c.width, c.height);
+      loadingContext.font = "bold 56px system-ui, sans-serif";
+      loadingContext.textAlign = "center";
+      loadingContext.fillStyle = "#8ef5a4";
+      loadingContext.fillText("SNAKE", c.width / 2, c.height / 2 - 30);
+      loadingContext.font = "20px system-ui, sans-serif";
+      loadingContext.fillStyle = "#8b93b8";
+      loadingContext.fillText(text, c.width / 2, c.height / 2 + 30);
+    }
+
+    function focusGame() { document.getElementById("canvas").focus(); window.focus(); }
+    window.onload = focusGame;
+    document.querySelector(".frame").addEventListener("click", focusGame);
+
+    // Stop arrow keys and space from scrolling the page
+    window.addEventListener("keydown", function (e) {
+      if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
+    }, false);
+
+    var Module = {
+      arguments: ["./game.love"],
+      INITIAL_MEMORY: 16777216,
+      printErr: console.error.bind(console),
+      canvas: (function () {
+        var canvas = document.getElementById("canvas");
+        canvas.addEventListener("webglcontextlost", function (e) {
+          alert("WebGL context lost. Please reload the page.");
+          e.preventDefault();
+        }, false);
+        return canvas;
+      })(),
+      setStatus: function (text) {
+        if (text) {
+          drawLoadingText(text);
+        } else if (Module.remainingDependencies === 0) {
+          document.getElementById("loadingCanvas").style.display = "none";
+          document.getElementById("canvas").style.visibility = "visible";
+          focusGame();
+        }
+      },
+      totalDependencies: 0,
+      remainingDependencies: 0,
+      monitorRunDependencies: function (left) {
+        this.remainingDependencies = left;
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(left
+          ? "Loading... (" + (this.totalDependencies - left) + "/" + this.totalDependencies + ")"
+          : "Starting...");
+      }
+    };
+    Module.setStatus("Downloading...");
+    window.onerror = function () {
+      Module.setStatus("Something went wrong - try reloading");
+      Module.setStatus = function (text) { if (text) Module.printErr("[post-exception status] " + text); };
+    };
+
+    var applicationLoad = function () { Love(Module); };
+  </script>
+  <script src="game.js"></script>
+  <script async src="love.js" onload="applicationLoad(this)"></script>
+</body>
+</html>
