@@ -52,6 +52,6 @@ LÖVE runs on LuaJIT, which only understands Lua 5.1 syntax and cannot parse `<c
 
 ## Web version
 
-`build_web.sh` packages the game and builds it with [love.js](https://github.com/Davidobot/love.js), a port of LÖVE to WebAssembly. The page template is `web/index.html`. On every push to `main`, `.github/workflows/pages.yml` runs the build and publishes it to GitHub Pages. To try it locally, run `./build_web.sh && python3 -m http.server -d dist 8000`.
+`build_web.sh` packages the game and builds it with [love.js](https://github.com/Davidobot/love.js), a port of LÖVE to WebAssembly. The page template is `web/index.html`. `./deploy_web.sh` builds it and commits the result to the `gh-pages` branch, which GitHub Pages serves. To try it locally, run `./build_web.sh && python3 -m http.server -d dist 8000`.
 
 The high score is written to `highscore.txt` in the current working directory, so run `love .` from inside this folder.
