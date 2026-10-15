@@ -36,6 +36,29 @@
       color: transparent;
     }
     .sub { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+    .course {
+      width: 640px;
+      max-width: 100%;
+      margin: 0 0 22px;
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: rgba(18, 23, 49, 0.7);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .course .name { font-size: 18px; font-weight: 600; color: var(--text); }
+    .course .num { font-size: 15px; color: var(--mint); font-weight: 600; }
+    .course .meta {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px 24px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .course .meta b { color: var(--text); font-weight: 500; }
     .frame {
       position: relative;
       width: 640px;
@@ -96,6 +119,15 @@
   </style>
 </head>
 <body>
+  <header class="course">
+    <div class="name">Ai and Games Course - Fall2k26</div>
+    <div class="num">Assignment #1</div>
+    <div class="meta">
+      <span>Instructor : <b>Zaina SaadEddin</b></span>
+      <span>Made by : <b>Mu'min Awwad</b></span>
+    </div>
+  </header>
+
   <h1>SNAKE</h1>
   <p class="sub">Lua + LÖVE, running in your browser</p>
 
